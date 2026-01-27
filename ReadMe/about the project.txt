@@ -1,0 +1,151 @@
+📌 LIST OF THINGS USED IN THIS PROJECT
+1️⃣ Programming Languages
+
+Python – Backend logic, database handling, analytics
+
+HTML – Structure of the web pages
+
+CSS – UI styling, layout, dark mode
+
+JavaScript – Dark mode toggle, custom category input, charts logic
+
+2️⃣ Frameworks & Libraries
+
+Flask (Python Framework)
+
+Used to create the web server
+
+Handles routing (/add, /delete, /profile)
+
+Connects frontend with backend
+
+Chart.js (JavaScript Library)
+
+Used for spending visualization
+
+Displays category-wise expense charts
+
+3️⃣ Database & Storage
+
+SQLite
+
+Lightweight local database
+
+Stores:
+
+Profiles
+
+Transactions
+
+Amount, date, note, category, profile ID
+
+Runs completely on localhost
+
+No internet required
+
+4️⃣ Development Environment
+
+Localhost (127.0.0.1)
+
+Application runs locally on the user’s system
+
+PowerShell / Command Prompt
+
+Used to run the Flask server
+
+Web Browser (Chrome / Edge / Firefox)
+
+Used to access and test the application UI
+
+5️⃣ Frontend Components
+
+Forms (Add Transaction, Add Profile)
+
+Dropdown menus (Profile switch, Category select)
+
+Buttons (Add, Delete, Dark Mode)
+
+Cards layout (Summary, Analytics, Charts)
+
+Responsive layout (Desktop + Mobile friendly)
+
+6️⃣ Backend Components
+
+Flask routes:
+
+/ – Home dashboard
+
+/add – Add transaction
+
+/delete – Delete transaction
+
+/add_profile – Add new user profile
+
+Database connection handler
+
+SQL queries for:
+
+Insert
+
+Delete
+
+Filter by profile
+
+Daily / Weekly / Monthly / Yearly analytics
+
+7️⃣ Features Implemented
+
+Multi-user profile system
+
+Credit & expense tracking
+
+Date & note per transaction
+
+Custom category support
+
+Automatic balance calculation
+
+Daily, weekly, monthly, yearly analytics
+
+Category-wise spending charts
+
+Dark mode UI
+
+Delete transaction functionality
+
+Local data persistence
+
+8️⃣ Project Structure
+expense-tracker/
+│
+├── app.py                 # Flask backend
+├── database.db            # SQLite database
+├── templates/
+│   └── index.html         # Complete UI
+
+9️⃣ Software & Tools
+
+Python 3.x
+
+Flask
+
+SQLite
+
+Chart.js
+
+VS Code / Notepad (any editor)
+
+Windows OS (can run on Linux/Mac too)
+
+10️⃣ Type of Project
+
+Web-based application
+
+CRUD application
+
+Personal finance management system
+
+Multi-user local system
+
+Beginner to intermediate full-stack project
+

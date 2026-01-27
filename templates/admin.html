@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="topbar admin-bar">
+    <h2>Admin Panel</h2>
+    <div>
+        <a href="/dashboard" class="logout">Back</a>
+        <a href="/register" class="btn">+ Add User</a>
+    </div>
+</div>
+
+<div class="container">
+
+{% for m in get_flashed_messages() %}
+<div class="alert">{{ m }}</div>
+{% endfor %}
+
+<div class="card">
+    <table>
+        <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Action</th>
+        </tr>
+
+        {% for u in users %}
+        <tr>
+            <td>{{ u.username }}</td>
+            <td><span class="badge {{ u.role }}">{{ u.role }}</span></td>
+            <td>
+                {% if u.id != session.user_id %}
+                    <a href="/delete_user/{{ u.id }}" class="danger">Delete</a>
+                {% else %}
+                    <span class="muted">Protected</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,262 @@
+:root {
+    --primary: #5b0bb5;
+    --primary-dark: #3b0764;
+    --accent: #8b5cf6;
+    --bg: #f4ecff;
+    --card: #ffffff;
+    --text: #1f2937;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(135deg, #efe3ff, #f9f5ff);
+    color: var(--text);
+}
+
+/* ---------- AUTH LAYOUT ---------- */
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-card {
+    width: 1000px;
+    height: 550px;
+    background: var(--card);
+    border-radius: 30px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    box-shadow: 0 40px 80px rgba(91,11,181,0.25);
+    overflow: hidden;
+}
+
+/* LEFT SIDE */
+.auth-left {
+    padding: 60px;
+}
+
+.brand {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.nav {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.nav a {
+    margin-right: 20px;
+    text-decoration: none;
+    color: #555;
+}
+
+h1 {
+    margin-top: 80px;
+    color: var(--primary-dark);
+}
+
+.input-group {
+    margin-top: 25px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 30px;
+    border: 1px solid #ddd;
+    outline: none;
+    font-size: 14px;
+}
+
+.options {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+.btn-primary {
+    width: 100%;
+    margin-top: 25px;
+    padding: 14px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.sub-link {
+    margin-top: 15px;
+    font-size: 13px;
+}
+
+/* RIGHT SIDE */
+.auth-right {
+    background: linear-gradient(135deg, #6d28d9, #4c1d95);
+    position: relative;
+}
+
+.auth-right::before,
+.auth-right::after {
+    content: "";
+    position: absolute;
+    border-radius: 40px;
+    opacity: 0.3;
+}
+
+.auth-right::before {
+    width: 220px;
+    height: 420px;
+    background: #a855f7;
+    top: 40px;
+    left: 60px;
+}
+
+.auth-right::after {
+    width: 260px;
+    height: 480px;
+    background: #7c3aed;
+    bottom: -40px;
+    right: 40px;
+}
+
+/* ---------- DASHBOARD COMMON ---------- */
+.topbar {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    padding: 18px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.stat {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    text-align: center;
+    font-weight: 600;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    text-align: left;
+    color: #555;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.alert {
+    background: #ede9fe;
+    color: var(--primary-dark);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+/* ================= DARK MODE ================= */
+
+body.dark {
+    background: linear-gradient(135deg, #0f0320, #2a0b45);
+    color: #e5e7eb;
+}
+
+/* CARDS */
+body.dark .card,
+body.dark .stat,
+body.dark .auth-card,
+body.dark .auth-left {
+    background: rgba(20, 10, 40, 0.85);
+    color: #e5e7eb;
+    box-shadow: 0 30px 80px rgba(168,85,247,0.35);
+}
+
+/* INPUTS */
+body.dark input {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+}
+
+body.dark input::placeholder {
+    color: #c4b5fd;
+}
+
+/* BUTTON */
+body.dark .btn-primary {
+    background: linear-gradient(135deg, #7c3aed, #d946ef);
+}
+
+/* TABLE */
+body.dark table th {
+    color: #c4b5fd;
+}
+
+body.dark table td {
+    color: #e5e7eb;
+}
+
+/* TOP BAR */
+body.dark .topbar {
+    background: linear-gradient(135deg, #4c1d95, #6d28d9);
+}
+
+/* LINKS */
+body.dark a {
+    color: #c084fc;
+}
+
+/* AUTH RIGHT (LOGIN PAGE PURPLE EFFECT) */
+body.dark .auth-right {
+    background: linear-gradient(135deg, #3b0764, #6d28d9);
+}
+
+body.dark .auth-right::before {
+    background: #9333ea;
+}
+
+body.dark .auth-right::after {
+    background: #7c3aed;
+}

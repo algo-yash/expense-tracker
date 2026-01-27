@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Chart.js (THIS WAS MISSING BEFORE) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+    <h2>{{ role|upper }} DASHBOARD</h2>
+    <div>
+        <button onclick="toggleDark()">🌙</button>
+        {{ username }}
+        <a href="/logout">Logout</a>
+    </div>
+</div>
+
+<div class="container">
+
+{% for m in get_flashed_messages() %}
+<div class="alert">{{ m }}</div>
+{% endfor %}
+
+{% if role == "user" %}
+<form method="POST" action="/add" class="card form-grid">
+    <input name="amount" type="number" step="0.01" placeholder="Amount" required>
+    <input name="date" type="date" required>
+    <input name="category" placeholder="Category" required>
+    <input name="note" placeholder="Note">
+    <button>Add</button>
+</form>
+{% endif %}
+
+<!-- ===== ANALYTICS CARDS ===== -->
+<div class="stats">
+    <div class="stat">Today<br><b>₹{{ daily }}</b></div>
+    <div class="stat">Weekly<br><b>₹{{ weekly }}</b></div>
+    <div class="stat">Monthly<br><b>₹{{ monthly }}</b></div>
+    <div class="stat">Yearly<br><b>₹{{ yearly }}</b></div>
+</div>
+
+<!-- ===== CHART SECTION (THIS WAS MISSING) ===== -->
+<div class="card">
+    <h3>Expense Analytics</h3>
+    <canvas id="expenseChart" height="120"></canvas>
+</div>
+
+<!-- ===== TABLE ===== -->
+<div class="card">
+    <a href="/export/csv">⬇ Export CSV</a>
+    <a href="/export/pdf">⬇ Export PDF</a>
+    {% if role == "admin" %}<a href="/admin">⚙ Admin Panel</a>{% endif %}
+
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Note</th>
+            {% if role == "admin" %}
+            <th>User</th>
+            <th>Action</th>
+            {% endif %}
+        </tr>
+
+        {% for t in transactions %}
+        <tr>
+            <td>{{ t.date }}</td>
+            <td>{{ t.category }}</td>
+            <td>₹{{ t.amount }}</td>
+            <td>{{ t.note }}</td>
+            {% if role == "admin" %}
+            <td>{{ t.username }}</td>
+            <td><a href="/delete_transaction/{{ t.id }}">Delete</a></td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+</div>
+
+<!-- ===== CHART SCRIPT ===== -->
+<script>
+const ctx = document.getElementById("expenseChart");
+
+new Chart(ctx, {
+    type: "bar",
+    data: {
+        labels: ["Daily", "Weekly", "Monthly", "Yearly"],
+        datasets: [{
+            label: "Expenses (₹)",
+            data: [{{ daily }}, {{ weekly }}, {{ monthly }}, {{ yearly }}],
+            backgroundColor: [
+                "#ef4444",
+                "#f97316",
+                "#3b82f6",
+                "#22c55e"
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        }
+    }
+});
+
+function toggleDark() {
+    document.body.classList.toggle("dark");
+}
+</script>
+
+</body>
+</html>
+<script>
+function toggleDark() {
+    document.body.classList.toggle("dark");
+}
+</script>

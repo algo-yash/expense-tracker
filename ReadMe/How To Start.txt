@@ -1,0 +1,6 @@
+step 1:
+open the expense tracker project in cmd or powershell
+Step 2:
+then in cmd type "python app.py"
+Step 3:
+ek ip generate hoga usko copy kar ke web pe paste kar dena hai

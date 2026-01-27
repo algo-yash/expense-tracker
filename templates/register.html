@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register User</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="centered">
+
+<div class="auth-card">
+    <h2>Create User</h2>
+    <p class="subtitle">Admin Only</p>
+
+    {% for m in get_flashed_messages() %}
+        <div class="alert">{{ m }}</div>
+    {% endfor %}
+
+    <form method="POST">
+        <input name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+
+        <select name="role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+        </select>
+
+        <button>Create User</button>
+    </form>
+
+    <br>
+    <a href="/admin" class="logout">← Back to Admin Panel</a>
+</div>
+
+</body>
+</html>

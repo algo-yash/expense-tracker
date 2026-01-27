@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+
+        <!-- LEFT SIDE -->
+        <div class="auth-left">
+
+            <h1>Log in</h1>
+
+            {% for m in get_flashed_messages() %}
+            <div class="alert">{{ m }}</div>
+            {% endfor %}
+
+            <form method="POST">
+                <div class="input-group">
+                    <input name="username" placeholder="Username" required>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" name="password" placeholder="Password" required>
+                </div>
+
+                <div class="options">
+                    <label>
+                        <input type="checkbox"> Remember me
+                    </label>
+                    <span>Forgot password?</span>
+                </div>
+
+                <button class="btn-primary">Log in</button>
+            </form>
+
+        </div>
+
+        <!-- RIGHT SIDE (PURPLE DESIGN) -->
+        <div class="auth-right"></div>
+
+    </div>
+</div>
+
+</body>
+</html>
