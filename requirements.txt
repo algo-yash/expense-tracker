@@ -1,7 +1,4 @@
-﻿flask
-werkzeug
-bcrypt
-fpdf
-matplotlib
 psycopg2-binary
-
+flask
+werkzeug
+fpdf
