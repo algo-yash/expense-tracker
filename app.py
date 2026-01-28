@@ -1,26 +1,32 @@
 from flask import Flask, render_template, request, redirect, session, flash, send_file
-import sqlite3, csv
+import psycopg2
+import psycopg2.extras
+import csv, os
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime
 from fpdf import FPDF
 
 app = Flask(__name__)
 app.secret_key = "expense-tracker-secret"
 
+# ---------- DATABASE ----------
 def get_db():
-    conn = sqlite3.connect("database.db")
-    conn.row_factory = sqlite3.Row
-    return conn
+    return psycopg2.connect(
+        os.environ["DATABASE_URL"],
+        cursor_factory=psycopg2.extras.RealDictCursor
+    )
 
 # ---------- LOGIN ----------
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         db = get_db()
-        user = db.execute(
-            "SELECT * FROM users WHERE username=?",
+        cur = db.cursor()
+        cur.execute(
+            "SELECT * FROM users WHERE username=%s",
             (request.form["username"],)
-        ).fetchone()
+        )
+        user = cur.fetchone()
         db.close()
 
         if user and check_password_hash(user["password"], request.form["password"]):
@@ -28,7 +34,9 @@ def login():
             session["username"] = user["username"]
             session["role"] = user["role"]
             return redirect("/dashboard")
+
         flash("Invalid credentials")
+
     return render_template("login.html")
 
 @app.route("/logout")
@@ -43,50 +51,50 @@ def dashboard():
         return redirect("/")
 
     db = get_db()
+    cur = db.cursor()
 
-    # -------- TRANSACTIONS --------
     if session["role"] == "admin":
-        transactions = db.execute("""
-            SELECT t.*, u.username FROM transactions t
+        cur.execute("""
+            SELECT t.*, u.username
+            FROM transactions t
             JOIN users u ON t.user_id = u.id
-            ORDER BY t.date DESC
-        """).fetchall()
-    else:
-        transactions = db.execute("""
-            SELECT * FROM transactions
-            WHERE user_id = ?
             ORDER BY date DESC
-        """, (session["user_id"],)).fetchall()
+        """)
+        transactions = cur.fetchall()
+    else:
+        cur.execute("""
+            SELECT *
+            FROM transactions
+            WHERE user_id=%s
+            ORDER BY date DESC
+        """, (session["user_id"],))
+        transactions = cur.fetchall()
 
-    user_filter = "" if session["role"] == "admin" else "AND user_id = ?"
-    params = () if session["role"] == "admin" else (session["user_id"],)
+    def stat(query, params=()):
+        cur.execute(query, params)
+        return cur.fetchone()["sum"] or 0
 
-    # -------- ANALYTICS (FIXED) --------
-    daily = db.execute(f"""
-        SELECT IFNULL(SUM(amount),0)
-        FROM transactions
-        WHERE date = DATE('now') {user_filter}
-    """, params).fetchone()[0]
+    uid = session["user_id"]
 
-    weekly = db.execute(f"""
-        SELECT IFNULL(SUM(amount),0)
-        FROM transactions
-        WHERE date >= DATE('now','-6 days') {user_filter}
-    """, params).fetchone()[0]
+    daily = stat(
+        "SELECT SUM(amount) FROM transactions WHERE date=CURRENT_DATE AND (%s OR user_id=%s)",
+        (session["role"] == "admin", uid)
+    )
 
-    monthly = db.execute(f"""
-        SELECT IFNULL(SUM(amount),0)
-        FROM transactions
-        WHERE strftime('%Y-%m', date) = strftime('%Y-%m','now')
-        {user_filter}
-    """, params).fetchone()[0]
+    weekly = stat(
+        "SELECT SUM(amount) FROM transactions WHERE date >= CURRENT_DATE - INTERVAL '6 days' AND (%s OR user_id=%s)",
+        (session["role"] == "admin", uid)
+    )
 
-    yearly = db.execute(f"""
-        SELECT IFNULL(SUM(amount),0)
-        FROM transactions
-        WHERE strftime('%Y', date) = strftime('%Y','now')
-        {user_filter}
-    """, params).fetchone()[0]
+    monthly = stat(
+        "SELECT SUM(amount) FROM transactions WHERE date >= date_trunc('month', CURRENT_DATE) AND (%s OR user_id=%s)",
+        (session["role"] == "admin", uid)
+    )
+
+    yearly = stat(
+        "SELECT SUM(amount) FROM transactions WHERE date >= date_trunc('year', CURRENT_DATE) AND (%s OR user_id=%s)",
+        (session["role"] == "admin", uid)
+    )
 
     db.close()
 
@@ -101,7 +109,7 @@ def dashboard():
         yearly=yearly
     )
 
-# ---------- ADD TRANSACTION (USER ONLY) ----------
+# ---------- ADD TRANSACTION ----------
 @app.route("/add", methods=["POST"])
 def add():
     if session.get("role") != "user":
@@ -113,108 +121,52 @@ def add():
     category = request.form["category"]
     note = request.form.get("note") or "—"
 
-    if amount <= 0:
-        flash("Amount must be positive")
-        return redirect("/dashboard")
-
-    if date > datetime.now().strftime("%Y-%m-%d"):
-        flash("Future date not allowed")
+    if amount <= 0 or date > datetime.now().strftime("%Y-%m-%d"):
+        flash("Invalid input")
         return redirect("/dashboard")
 
     db = get_db()
-    db.execute(
-        "INSERT INTO transactions (amount, date, category, note, user_id) VALUES (?, ?, ?, ?, ?)",
-        (amount, date, category, note, session["user_id"])
-    )
+    cur = db.cursor()
+    cur.execute("""
+        INSERT INTO transactions (amount, date, category, note, user_id)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (amount, date, category, note, session["user_id"]))
     db.commit()
     db.close()
 
     flash("Transaction added")
     return redirect("/dashboard")
 
-# ---------- DELETE TRANSACTION (ADMIN ONLY) ----------
+# ---------- DELETE TRANSACTION ----------
 @app.route("/delete_transaction/<int:id>")
 def delete_transaction(id):
     if session.get("role") != "admin":
-        flash("Unauthorized")
         return redirect("/dashboard")
 
     db = get_db()
-    db.execute("DELETE FROM transactions WHERE id=?", (id,))
+    cur = db.cursor()
+    cur.execute("DELETE FROM transactions WHERE id=%s", (id,))
     db.commit()
     db.close()
 
     flash("Transaction deleted")
     return redirect("/dashboard")
 
-# ---------- EXPORT CSV ----------
-@app.route("/export/csv")
-def export_csv():
-    if "user_id" not in session:
-        return redirect("/")
-
-    db = get_db()
-    if session["role"] == "admin":
-        rows = db.execute("""
-            SELECT date, category, amount, note, username
-            FROM transactions t JOIN users u ON t.user_id=u.id
-        """).fetchall()
-        headers = ["Date", "Category", "Amount", "Note", "User"]
-    else:
-        rows = db.execute("""
-            SELECT date, category, amount, note FROM transactions WHERE user_id=?
-        """, (session["user_id"],)).fetchall()
-        headers = ["Date", "Category", "Amount", "Note"]
-    db.close()
-
-    with open("expenses.csv", "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(headers)
-        for r in rows:
-            writer.writerow(r)
-
-    return send_file("expenses.csv", as_attachment=True)
-
-# ---------- EXPORT PDF ----------
-@app.route("/export/pdf")
-def export_pdf():
-    if "user_id" not in session:
-        return redirect("/")
-
-    db = get_db()
-    if session["role"] == "admin":
-        rows = db.execute("""
-            SELECT date, category, amount, note, username
-            FROM transactions t JOIN users u ON t.user_id=u.id
-        """).fetchall()
-    else:
-        rows = db.execute("""
-            SELECT date, category, amount, note FROM transactions WHERE user_id=?
-        """, (session["user_id"],)).fetchall()
-    db.close()
-
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=10)
-    pdf.cell(0, 10, "Expense Report", ln=True)
-
-    for r in rows:
-        pdf.cell(0, 8, " | ".join(map(str, r)), ln=True)
-
-    pdf.output("expenses.pdf")
-    return send_file("expenses.pdf", as_attachment=True)
-
-# ---------- ADMIN PANEL ----------
+# ---------- ADMIN ----------
 @app.route("/admin")
 def admin():
     if session.get("role") != "admin":
         return redirect("/dashboard")
+
     db = get_db()
-    users = db.execute("SELECT * FROM users").fetchall()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM users")
+    users = cur.fetchall()
     db.close()
+
     return render_template("admin.html", users=users)
 
-# ---------- REGISTER USER ----------
+# ---------- REGISTER ----------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if session.get("role") != "admin":
@@ -223,20 +175,22 @@ def register():
     if request.method == "POST":
         try:
             db = get_db()
-            db.execute(
-                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-                (
-                    request.form["username"],
-                    generate_password_hash(request.form["password"]),
-                    request.form["role"]
-                )
-            )
+            cur = db.cursor()
+            cur.execute("""
+                INSERT INTO users (username, password, role)
+                VALUES (%s, %s, %s)
+            """, (
+                request.form["username"],
+                generate_password_hash(request.form["password"]),
+                request.form["role"]
+            ))
             db.commit()
             db.close()
             flash("User created")
             return redirect("/admin")
         except:
             flash("Username exists")
+
     return render_template("register.html")
 
 # ---------- DELETE USER ----------
@@ -246,17 +200,16 @@ def delete_user(id):
         return redirect("/admin")
 
     db = get_db()
-    db.execute("DELETE FROM transactions WHERE user_id=?", (id,))
-    db.execute("DELETE FROM users WHERE id=?", (id,))
+    cur = db.cursor()
+    cur.execute("DELETE FROM transactions WHERE user_id=%s", (id,))
+    cur.execute("DELETE FROM users WHERE id=%s", (id,))
     db.commit()
     db.close()
+
     flash("User deleted")
     return redirect("/admin")
-import os
 
+# ---------- RUN ----------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-    
