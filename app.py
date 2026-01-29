@@ -209,6 +209,11 @@ def delete_user(id):
     flash("User deleted")
     return redirect("/admin")
 
+    @app.errorhandler(Exception)
+def handle_exception(e):
+    return f"ERROR: {str(e)}", 500
+
+
 # ---------- RUN ----------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
