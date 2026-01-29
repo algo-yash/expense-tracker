@@ -209,7 +209,7 @@ def delete_user(id):
     flash("User deleted")
     return redirect("/admin")
 
- @app.errorhandler(Exception)
+@app.errorhandler(Exception)
 def handle_exception(e):
     return f"ERROR: {str(e)}", 500
 
